@@ -1,5 +1,5 @@
 format_version: 1.1.0
-default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+default_step_lib_source: https://github.com/megamingus/bitrise-steplib.git
 
 app:
   envs:
@@ -64,7 +64,7 @@ workflows:
   # --- workflow to Release version
   create-release-version:
     envs:
-    - RELEASE_VERSION: 3.5.0
+    - RELEASE_VERSION: 0.0.0
     steps:
     - script:
         title:
@@ -83,8 +83,8 @@ workflows:
     envs:
       - MY_STEPLIB_REPO_FORK_GIT_URL:
       - STEP_ID_IN_STEPLIB: amazon-s3-deploy
-      - STEP_GIT_VERION_TAG_TO_SHARE: 3.5.0
-      - STEP_GIT_CLONE_URL: https://github.com/bitrise-io/steps-amazon-s3-deploy
+      - STEP_GIT_VERION_TAG_TO_SHARE: 0.0.0
+      - STEP_GIT_CLONE_URL: https://github.com/megamingus/steps-amazon-s3-deploy
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share

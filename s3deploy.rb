@@ -128,6 +128,7 @@ begin
     base_path_in_bucket = "bitrise_#{options[:app_slug]}/#{utc_timestamp}_build_#{options[:build_slug]}"
   end
 
+
   #
   # supported: private, public_read
   acl_arg = 'public-read'
@@ -146,7 +147,7 @@ begin
   # ipa upload
   log_info('Uploading IPA...')
 
-  ipa_path_in_bucket = "#{base_path_in_bucket}/#{File.basename(options[:ipa])}"
+  ipa_path_in_bucket = "#{File.basename(options[:ipa])}"
   ipa_full_s3_path = s3_object_uri_for_bucket_and_path(options[:bucket_name], ipa_path_in_bucket)
   public_url_ipa = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], ipa_path_in_bucket)
 
@@ -161,7 +162,7 @@ begin
   if options[:dsym]
     log_info('Uploading dSYM...')
 
-    dsym_path_in_bucket = "#{base_path_in_bucket}/#{File.basename(options[:dsym])}"
+    dsym_path_in_bucket = "#{File.basename(options[:dsym])}"
     dsym_full_s3_path = s3_object_uri_for_bucket_and_path(options[:bucket_name], dsym_path_in_bucket)
     public_url_dsym = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], dsym_path_in_bucket)
 
@@ -176,37 +177,58 @@ begin
 
   #
   # plist generation - we have to run it after we have obtained the public url to the ipa
-  log_info('Generating Info.plist...')
+  log_info('Generating sketch.manifest.latest.plist...')
 
   success = system("sh #{@this_script_path}/gen_plist.sh")
 
-  fail 'Failed to generate info.plist' unless success
+  fail 'Failed to generate sketch.manifest.latest.plist' unless success
 
-  log_done('Generating Info.plist succed')
+  log_done('Generating sketch.manifest.latest.plist succed')
 
   #
   # plist upload
-  plist_local_path = 'Info.plist'
+  plist_local_path = 'sketch.manifest.latest.plist'
   public_url_plist = ''
 
   if File.exist?(plist_local_path)
-    log_info('Uploading Info.plist...')
+    log_info('Uploading sketch.manifest.latest.plist...')
 
-    plist_path_in_bucket = "#{base_path_in_bucket}/Info.plist"
+    plist_path_in_bucket = "sketch.manifest.latest.plist"
     plist_full_s3_path = "s3://#{options[:bucket_name]}/#{plist_path_in_bucket}"
     public_url_plist = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], plist_path_in_bucket)
 
-    fail 'Failed to upload Info.plist' unless do_s3upload(plist_local_path, plist_full_s3_path, acl_arg)
+    fail 'Failed to upload sketch.manifest.latest.plist' unless do_s3upload(plist_local_path, plist_full_s3_path, acl_arg)
     fail 'Failed to remove Plist' unless system(%Q{rm "#{plist_local_path}"})
 
-    log_done('Info.plist upload success')
+    log_done('sketch.manifest.latest.plist upload success')
   else
-    log_warn('NO Info.plist generated :<')
+    log_warn('NO sketch.manifest.latest.plist generated :<')
   end
   export_output('S3_DEPLOY_STEP_URL_PLIST', public_url_plist)
 
   email_ready_link_url = "itms-services://?action=download-manifest&url=#{public_url_plist}"
   export_output('S3_DEPLOY_STEP_EMAIL_READY_URL', email_ready_link_url)
+
+  #
+  # version upload
+  version_file_local_path = 'version'
+  public_url_version_file = ''
+
+  if File.exist?(version_file_local_path)
+    log_info('Uploading version file...')
+
+    version_file_path_in_bucket = "version"
+    version_full_s3_path = "s3://#{options[:bucket_name]}/#{version_file_path_in_bucket}"
+    public_url_version_file = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], version_file_path_in_bucket)
+
+    fail 'Failed to upload version file' unless do_s3upload(version_file_local_path, version_full_s3_path, acl_arg)
+    fail 'Failed to remove version file' unless system(%Q{rm "#{version_file_local_path}"})
+
+    log_done('version file upload success')
+  else
+    log_warn('NO version file generated :<')
+  end
+  export_output('S3_DEPLOY_STEP_URL_VESION_FILE', public_url_version_file)
 
   #
   # Print deploy infos

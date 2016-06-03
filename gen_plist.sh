@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generates an xml structured plist with the minimum required entries from inner info.plist in ipa
+# Generates an xml structured plist with the minimum required entries from inner sketch.manifest.latest.plist in ipa
 
 unzip "$ipa_path" > /dev/null
 
@@ -30,7 +30,7 @@ APP_NAME=${APP_BASE_NAME%.app}
 BUNDLEID=`/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" ./Payload/"$APP_BASE_NAME"/Info.plist`
 BUNDLEVER=`/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ./Payload/"$APP_BASE_NAME"/Info.plist`
 
-generated_plist_path="./Info.plist"
+generated_plist_path="./sketch.manifest.latest.plist"
 if [ -e "${generated_plist_path}" ]; then
 	rm "${generated_plist_path}"
 fi
@@ -66,5 +66,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 	</array>
 </dict>
 </plist>" > "${generated_plist_path}"
+
+echo "$BUNDLEVER" > "./version"
 
 rm -rf ./Payload
