@@ -66,6 +66,17 @@ inputs:
       summary: ""
       description: ""
       is_required: true
+  - is_pr: ""
+    opts:
+      title: "is pull-request"
+      summary: ""
+      description: ""
+  - git_branch: "$BITRISE_GIT_BRANCH"
+    opts:
+      title: "git branch"
+      summary: ""
+      description: ""
+      is_required: true
   - bucket_region: ""
     opts:
       title: "Amazon S3 Bucket Region"

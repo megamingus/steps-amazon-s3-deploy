@@ -70,7 +70,9 @@ options = {
   bucket_name: ENV['bucket_name'],
   bucket_region: ENV['bucket_region'],
   path_in_bucket: ENV['path_in_bucket'],
-  acl: ENV['file_access_level']
+  acl: ENV['file_access_level'],
+  is_pr: ENV['is_pr'],
+  git_branch: ENV['git_branch']
 }
 
 #
@@ -112,6 +114,10 @@ begin
   fail 'Missing required input: bucket_name' if options[:bucket_name].to_s.eql?('')
   fail 'Missing required input: file_access_level' if options[:acl].to_s.eql?('')
 
+  is_pr = options[:is_pr].to_s.eql?('')? false :  true
+
+  git_branch = options[:git_branch].gsub('/', '-')
+
   #
   # AWS configs
   ENV['AWS_ACCESS_KEY_ID'] = options[:access_key]
@@ -147,7 +153,7 @@ begin
   # ipa upload
   log_info('Uploading IPA...')
 
-  ipa_path_in_bucket = "#{File.basename(options[:ipa])}"
+  ipa_path_in_bucket = is_pr ? "#{git_branch}/#{File.basename(options[:ipa])}" : "#{File.basename(options[:ipa])}"
   ipa_full_s3_path = s3_object_uri_for_bucket_and_path(options[:bucket_name], ipa_path_in_bucket)
   public_url_ipa = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], ipa_path_in_bucket)
 
@@ -162,7 +168,7 @@ begin
   if options[:dsym]
     log_info('Uploading dSYM...')
 
-    dsym_path_in_bucket = "#{File.basename(options[:dsym])}"
+    dsym_path_in_bucket = is_pr ? "#{git_branch}/#{File.basename(options[:dsym])}" : "#{File.basename(options[:dsym])}"
     dsym_full_s3_path = s3_object_uri_for_bucket_and_path(options[:bucket_name], dsym_path_in_bucket)
     public_url_dsym = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], dsym_path_in_bucket)
 
@@ -193,7 +199,7 @@ begin
   if File.exist?(plist_local_path)
     log_info('Uploading sketch.manifest.latest.plist...')
 
-    plist_path_in_bucket = "sketch.manifest.latest.plist"
+    plist_path_in_bucket = is_pr ? "#{git_branch}/sketch.manifest.latest.plist" : "sketch.manifest.latest.plist"
     plist_full_s3_path = "s3://#{options[:bucket_name]}/#{plist_path_in_bucket}"
     public_url_plist = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], plist_path_in_bucket)
 
@@ -210,37 +216,39 @@ begin
   export_output('S3_DEPLOY_STEP_EMAIL_READY_URL', email_ready_link_url)
   ENV['S3_DEPLOY_STEP_URL_PLIST'] = "#{public_url_plist}"
 
-  #
-  # html generation - we have to run it after we have obtained the public url to the ipa
-  log_info('Generating index.html...')
+  if is_pr
+    #
+    # html generation - we have to run it after we have obtained the public url to the ipa
+    log_info('Generating index.html...')
 
-  success = system("sh #{@this_script_path}/gen_html.sh")
+    success = system("sh #{@this_script_path}/gen_html.sh")
 
-  fail 'Failed to generate index.html' unless success
+    fail 'Failed to generate index.html' unless success
 
-  log_done('Generating index.html succed')
+    log_done('Generating index.html succed')
 
-  #
-  # html upload
-  html_local_path = 'index.html'
-  public_url_html = ''
+    #
+    # html upload
+    html_local_path = 'index.html'
+    public_url_html = ''
 
-  if File.exist?(html_local_path)
-    log_info('Uploading index.html...')
+    if File.exist?(html_local_path)
+      log_info('Uploading index.html...')
 
-    html_path_in_bucket = "index.html"
-    html_full_s3_path = "s3://#{options[:bucket_name]}/#{html_path_in_bucket}"
-    public_url_html = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], html_path_in_bucket)
+      html_path_in_bucket = is_pr ? "#{git_branch}/index.html" : "index.html"
+      html_full_s3_path = "s3://#{options[:bucket_name]}/#{html_path_in_bucket}"
+      public_url_html = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], html_path_in_bucket)
 
-    fail 'Failed to upload index.html' unless do_s3upload(html_local_path, html_full_s3_path, acl_arg)
-    fail 'Failed to remove html' unless system(%Q{rm "#{html_local_path}"})
+      fail 'Failed to upload index.html' unless do_s3upload(html_local_path, html_full_s3_path, acl_arg)
+      fail 'Failed to remove html' unless system(%Q{rm "#{html_local_path}"})
 
-    log_done('index.html upload success')
-  else
-    log_warn('NO index.html generated :<')
+      log_done('index.html upload success')
+    else
+      log_warn('NO index.html generated :<')
+    end
+    export_output('S3_DEPLOY_STEP_URL_HTML', public_url_html)
+
   end
-  export_output('S3_DEPLOY_STEP_URL_HTML', public_url_html)
-
 
 
   email_ready_link_url = "itms-services://?action=download-manifest&url=#{public_url_plist}"
@@ -254,7 +262,7 @@ begin
   if File.exist?(version_file_local_path)
     log_info('Uploading version file...')
 
-    version_file_path_in_bucket = "version"
+    version_file_path_in_bucket = is_pr ? "#{git_branch}/version" : "version"
     version_full_s3_path = "s3://#{options[:bucket_name]}/#{version_file_path_in_bucket}"
     public_url_version_file = public_url_for_bucket_and_path(options[:bucket_name], options[:bucket_region], version_file_path_in_bucket)
 

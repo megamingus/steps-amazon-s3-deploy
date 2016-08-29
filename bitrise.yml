@@ -8,6 +8,7 @@ app:
   - BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH
   - BITRISE_APP_SLUG: $BITRISE_APP_SLUG
   - BITRISE_BUILD_SLUG: $BITRISE_BUILD_SLUG
+  - BITRISE_GIT_BRANCH: $BITRISE_GIT_BRANCH
 
   - AWS_ACCESS_KEY: $AWS_ACCESS_KEY
   - AWS_SECRET_KEY: $AWS_SECRET_KEY
@@ -27,6 +28,7 @@ workflows:
         - dsym_path: "$BITRISE_DSYM_PATH"
         - app_slug: "$BITRISE_APP_SLUG"
         - build_slug: "$BITRISE_BUILD_SLUG"
+        - git_branch: "$BITRISE_GIT_BRANCH"
 
         - aws_access_key: $AWS_ACCESS_KEY
         - aws_secret_key: $AWS_SECRET_KEY
