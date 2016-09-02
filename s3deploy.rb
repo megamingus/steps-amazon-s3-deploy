@@ -291,6 +291,8 @@ begin
   end
 
   log_details("* Plist: #{public_url_plist}")
+  
+  log_details("* HTML:  #{public_url_html}")
 
   log_info('Install link:')
   log_details("#{email_ready_link_url}")
